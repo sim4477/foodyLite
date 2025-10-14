@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Booking #{{ object.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Assign Delivery Partner</h4>
+                    <small class="text-muted">Booking #{{ object.id }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-utensils text-primary"></i> Order Details</h6>
+                            <p><strong>Food Items:</strong> {{ object.food_items|truncatechars:50 }}</p>
+                            <p><strong>Customer:</strong> {{ object.customer.mobile_number }}</p>
+                            <p><strong>Amount:</strong> ₹{{ object.total_amount }}</p>
+                            <p><strong>Pickup:</strong> {{ object.pickup_address|truncatechars:30 }}</p>
+                            <p><strong>Delivery:</strong> {{ object.delivery_address|truncatechars:30 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.delivery_partner.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user-tie"></i> Select Delivery Partner
+                                    </label>
+                                    {{ form.delivery_partner }}
+                                    {% if form.delivery_partner.errors %}
+                                    <div class="text-danger">{{ form.delivery_partner.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        Choose an available delivery partner for this order.
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{% url 'booking:detail' object.id %}" class="btn btn-secondary me-md-2">
+                                        <i class="fas fa-arrow-left"></i> Back to Booking
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-user-plus"></i> Assign Partner
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Available Delivery Partners</h6>
+                </div>
+                <div class="card-body">
+                    {% if delivery_partners %}
+                    <div class="row">
+                        {% for partner in delivery_partners %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <div class="avatar mb-2">
+                                        <i class="fas fa-motorcycle fa-2x text-success"></i>
+                                    </div>
+                                    <h6 class="card-title">{{ partner.mobile_number }}</h6>
+                                    <p class="card-text text-muted">
+                                        <small>
+                                            Active Orders: {{ partner.delivery_bookings.count }}<br>
+                                            Last Active: {{ partner.last_login|date:"M d, H:i" }}
+                                        </small>
+                                    </p>
+                                    <button class="btn btn-sm btn-outline-success" onclick="selectPartner('{{ partner.id }}')">
+                                        Select
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="text-muted">No available delivery partners found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectPartner(partnerId) {
+    document.getElementById('{{ form.delivery_partner.id_for_label }}').value = partnerId;
+    
+    // Highlight selected partner
+    document.querySelectorAll('.card.border-success').forEach(card => {
+        card.classList.remove('border-primary');
+        card.classList.add('border-success');
+    });
+    
+    event.target.closest('.card').classList.remove('border-success');
+    event.target.closest('.card').classList.add('border-primary');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Status - Booking #{{ object.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Update Delivery Status</h4>
+                    <small class="text-muted">Booking #{{ object.id }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Current Status:</strong> {{ object.get_status_display }}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                <i class="fas fa-route"></i> Update Status To
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="text-danger">{{ form.status.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Select the next step in the delivery process.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'booking:detail' object.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Booking
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Update Status
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Delivery Process</h6>
+                </div>
+                <div class="card-body">
+                    <div class="delivery-steps">
+                        <div class="step {% if object.status == 'started' %}active{% elif object.status in 'reached,collected,delivered' %}completed{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="step-content">
+                                <h6>Started</h6>
+                                <small>Begin delivery process</small>
+                            </div>
+                        </div>
+                        
+                        <div class="step {% if object.status == 'reached' %}active{% elif object.status in 'collected,delivered' %}completed{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="step-content">
+                                <h6>Reached</h6>
+                                <small>Arrived at pickup location</small>
+                            </div>
+                        </div>
+                        
+                        <div class="step {% if object.status == 'collected' %}active{% elif object.status == 'delivered' %}completed{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="step-content">
+                                <h6>Collected</h6>
+                                <small>Food collected from restaurant</small>
+                            </div>
+                        </div>
+                        
+                        <div class="step {% if object.status == 'delivered' %}active{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="step-content">
+                                <h6>Delivered</h6>
+                                <small>Order delivered to customer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.delivery-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.step.completed {
+    background-color: #d1edff;
+    border-left: 4px solid #0dcaf0;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.step.active .step-icon {
+    background-color: #ffc107;
+    color: white;
+}
+
+.step.completed .step-icon {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+.step-content h6 {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.step-content small {
+    color: #6c757d;
+}
+</style>
+{% endblock %}

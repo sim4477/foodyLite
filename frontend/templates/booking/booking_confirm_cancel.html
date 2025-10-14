@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Booking #{{ object.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Cancel Booking
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Are you sure you want to cancel this booking?</strong>
+                        <br>
+                        This action cannot be undone.
+                    </div>
+
+                    <div class="booking-summary">
+                        <h6>Booking Details:</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <p><strong>Booking ID:</strong> #{{ object.id }}</p>
+                                <p><strong>Status:</strong> {{ object.get_status_display }}</p>
+                                <p><strong>Amount:</strong> ₹{{ object.total_amount }}</p>
+                            </div>
+                            <div class="col-6">
+                                <p><strong>Food Items:</strong> {{ object.food_items|truncatechars:30 }}</p>
+                                <p><strong>Created:</strong> {{ object.created_at|date:"M d, H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="cancellation_reason" class="form-label">
+                                <i class="fas fa-comment-alt"></i> Reason for Cancellation (Optional)
+                            </label>
+                            <textarea class="form-control" id="cancellation_reason" name="cancellation_reason" rows="3" 
+                                    placeholder="Please let us know why you're cancelling this order..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'booking:detail' object.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Keep Booking
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Yes, Cancel Booking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Cancellation Policy
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Orders can be cancelled before delivery partner assignment</li>
+                        <li><i class="fas fa-check text-success"></i> Full refund will be processed within 2-3 business days</li>
+                        <li><i class="fas fa-times text-danger"></i> Orders cannot be cancelled once delivery partner is assigned</li>
+                        <li><i class="fas fa-times text-danger"></i> Orders cannot be cancelled once delivery has started</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.booking-summary {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.booking-summary h6 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.booking-summary p {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}

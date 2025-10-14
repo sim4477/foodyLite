@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - Booking #{{ booking.id }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/chat.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Chat Container -->
+            <div class="card shadow-lg border-0">
+                <div class="chat-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="fas fa-comments"></i> Chat - Booking #{{ booking.id }}
+                            </h5>
+                            <small>
+                                {% if user.role == 'customer' %}
+                                💬 Chat with your delivery partner
+                                {% else %}
+                                💬 Chat with customer
+                                {% endif %}
+                            </small>
+                        </div>
+                        <a href="{% url 'booking:detail' booking.id %}" class="back-button">
+                            <i class="fas fa-arrow-left"></i> Back to Booking
+                        </a>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="connection-status" id="connectionStatus">
+                        <i class="fas fa-circle"></i> Connecting...
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <div class="typing-indicator" id="typingIndicator">
+                        <span class="loading"></span> Someone is typing...
+                    </div>
+
+                    <div class="message-input-container">
+                        <input type="text" id="messageInput" class="message-input" placeholder="Type your message..." maxlength="500">
+                        <button id="sendButton" class="send-button">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Information Card -->
+            <div class="booking-info-card mt-4">
+                <div class="booking-info-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Booking Information
+                    </h6>
+                </div>
+                <div class="booking-info-body">
+                    <div class="info-row">
+                        <span class="info-label">🍕 Food Items:</span>
+                        <span class="info-value">{{ booking.food_items|truncatechars:30 }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">💰 Amount:</span>
+                        <span class="info-value">₹{{ booking.total_amount }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📋 Status:</span>
+                        <span class="info-value">
+                            <span class="status-badge status-{{ booking.status }}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">📍 Delivery Address:</span>
+                        <span class="info-value">{{ booking.delivery_address|truncatechars:25 }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">⏰ Created:</span>
+                        <span class="info-value">{{ booking.created_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // WebSocket connection
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/{{ booking.id }}/'
+    );
+
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const typingIndicator = document.getElementById('typingIndicator');
+
+    // Connection status handling
+    chatSocket.onopen = function(e) {
+        connectionStatus.innerHTML = '<i class="fas fa-circle"></i> Connected';
+        connectionStatus.className = 'connection-status connected';
+        loadPreviousMessages();
+    };
+
+    chatSocket.onclose = function(e) {
+        connectionStatus.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
+        connectionStatus.className = 'connection-status disconnected';
+    };
+
+    chatSocket.onerror = function(e) {
+        console.error('WebSocket error:', e);
+        connectionStatus.innerHTML = '<i class="fas fa-circle"></i> Connection Error';
+        connectionStatus.className = 'connection-status disconnected';
+    };
+
+    // Message handling
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        addMessage(data.message, data.sender_name, data.timestamp, data.sender_id);
+    };
+
+    // Send message
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'sender_id': {{ user.id }}
+            }));
+            messageInput.value = '';
+        }
+    }
+
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Add message to chat
+    function addMessage(message, senderName, timestamp, senderId) {
+        const messageDiv = document.createElement('div');
+        const isCurrentUser = senderId == {{ user.id }};
+        messageDiv.className = 'message ' + (isCurrentUser ? 'sent' : 'received');
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        
+        // Create different styling based on user role
+        let userIcon = '';
+        let messageStyle = '';
+        
+        if (isCurrentUser) {
+            // Current user's message (sent)
+            userIcon = '<i class="fas fa-user-check"></i>';
+            messageStyle = `
+                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-meta">
+                    ${userIcon} You • ${formatTime(timestamp)}
+                </div>
+            `;
+        } else {
+            // Other user's message (received)
+            userIcon = '<i class="fas fa-user"></i>';
+            messageStyle = `
+                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-meta">
+                    ${userIcon} ${senderName} • ${formatTime(timestamp)}
+                </div>
+            `;
+        }
+        
+        messageContent.innerHTML = messageStyle;
+        messageDiv.appendChild(messageContent);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Load previous messages
+    function loadPreviousMessages() {
+        fetch('/chat/api/messages/{{ booking.id }}/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages) {
+                    data.messages.forEach(msg => {
+                        addMessage(msg.message, msg.sender_name, msg.timestamp, msg.sender_id);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading messages:', error));
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Auto-scroll to bottom
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Typing indicator (optional enhancement)
+    let typingTimer;
+    messageInput.addEventListener('input', function() {
+        // Show typing indicator logic can be added here
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            // Hide typing indicator
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Details #{{ booking.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Booking Details #{{ booking.id }}</h4>
+                    {% include 'components/status_badge.html' with status=booking.status %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-utensils text-primary"></i> Food Items</h6>
+                            <p class="text-muted">{{ booking.food_items }}</p>
+
+                            <h6><i class="fas fa-store text-success"></i> Pickup Address</h6>
+                            <p class="text-muted">{{ booking.pickup_address }}</p>
+
+                            <h6><i class="fas fa-home text-info"></i> Delivery Address</h6>
+                            <p class="text-muted">{{ booking.delivery_address }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-phone text-warning"></i> Contact Number</h6>
+                            <p class="text-muted">{{ booking.phone_number }}</p>
+
+                            <h6><i class="fas fa-rupee-sign text-success"></i> Total Amount</h6>
+                            <p class="text-muted"><strong>₹{{ booking.total_amount }}</strong></p>
+
+                            <h6><i class="fas fa-clock text-secondary"></i> Created</h6>
+                            <p class="text-muted">{{ booking.created_at|date:"M d, Y H:i" }}</p>
+
+                            {% if booking.delivery_partner %}
+                            <h6><i class="fas fa-motorcycle text-primary"></i> Delivery Partner</h6>
+                            <p class="text-muted">{{ booking.delivery_partner.mobile_number }}</p>
+                            {% endif %}
+
+                            {% if booking.assigned_at %}
+                            <h6><i class="fas fa-user-check text-success"></i> Assigned</h6>
+                            <p class="text-muted">{{ booking.assigned_at|date:"M d, Y H:i" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if booking.special_instructions %}
+                    <hr>
+                    <h6><i class="fas fa-sticky-note text-warning"></i> Special Instructions</h6>
+                    <p class="text-muted">{{ booking.special_instructions }}</p>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <h6><i class="fas fa-route text-info"></i> Delivery Status</h6>
+                        <div class="progress mb-3">
+                            {% if booking.status == 'pending' %}
+                            <div class="progress-bar bg-secondary" style="width: 10%"></div>
+                            {% elif booking.status == 'assigned' %}
+                            <div class="progress-bar bg-primary" style="width: 25%"></div>
+                            {% elif booking.status == 'started' %}
+                            <div class="progress-bar bg-info" style="width: 40%"></div>
+                            {% elif booking.status == 'reached' %}
+                            <div class="progress-bar bg-warning" style="width: 60%"></div>
+                            {% elif booking.status == 'collected' %}
+                            <div class="progress-bar bg-success" style="width: 80%"></div>
+                            {% elif booking.status == 'delivered' %}
+                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                            {% elif booking.status == 'cancelled' %}
+                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Order Placed</small>
+                            {% if booking.status == 'cancelled' %}
+                            <small class="text-muted text-danger">Cancelled</small>
+                            {% else %}
+                            <small class="text-muted">Delivered</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'booking:list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                        
+                        {% if booking.can_be_cancelled and user.role == 'customer' %}
+                        <a href="{% url 'booking:cancel' booking.id %}" class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i> Cancel Booking
+                        </a>
+                        {% endif %}
+                        
+                        {% if booking.can_chat %}
+                        <a href="{% url 'chat:room' booking.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-comments"></i> Chat
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.role == 'delivery_partner' and booking.delivery_partner == user %}
+                        <a href="{% url 'booking:update_status' booking.id %}" class="btn btn-outline-warning">
+                            <i class="fas fa-edit"></i> Update Status
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.role == 'admin' and booking.status == 'pending' %}
+                        <a href="{% url 'booking:assign' booking.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus"></i> Assign Partner
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if booking.can_chat %}
+                    <a href="{% url 'chat:room' booking.id %}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-comments"></i> Start Chat
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'customer' and booking.can_be_cancelled %}
+                    <a href="{% url 'booking:cancel' booking.id %}" class="btn btn-danger w-100 mb-2">
+                        <i class="fas fa-times"></i> Cancel Booking
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'delivery_partner' and booking.delivery_partner == user %}
+                    <a href="{% url 'booking:update_status' booking.id %}" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Update Status
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.role == 'admin' and booking.status == 'pending' %}
+                    <a href="{% url 'booking:assign' booking.id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-user-plus"></i> Assign Delivery Partner
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Booking Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item {% if booking.status != 'pending' %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Order Placed</h6>
+                                <small class="text-muted">{{ booking.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if booking.assigned_at %}
+                        <div class="timeline-item {% if booking.status not in 'pending' %}completed{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Assigned to Partner</h6>
+                                <small class="text-muted">{{ booking.assigned_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if booking.status == 'delivered' %}
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Delivered</h6>
+                                <small class="text-muted">{{ booking.updated_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% elif booking.status == 'cancelled' %}
+                        <div class="timeline-item cancelled">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6 class="text-danger">Cancelled</h6>
+                                <small class="text-muted">
+                                    {% if booking.cancelled_at %}
+                                        {{ booking.cancelled_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                        {{ booking.updated_at|date:"M d, Y H:i" }}
+                                    {% endif %}
+                                    {% if booking.cancelled_by %}
+                                        by {{ booking.cancelled_by.mobile_number }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    border: 2px solid #fff;
+}
+
+.timeline-item.completed .timeline-marker {
+    background-color: #28a745;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}
