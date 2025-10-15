@@ -27,16 +27,35 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
 # Database configuration for production
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'fooddelivery_db'),
-        'USER': os.environ.get('DB_USER', 'fooddelivery'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# Uses DATABASE_URL environment variable
+# Format: postgresql://user:password@host:port/database
+# Example: postgresql://fooddelivery:mypassword@localhost:5432/fooddelivery_db
+
+import dj_database_url
+
+# Try to get DATABASE_URL first, fallback to individual settings
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Fallback to individual environment variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'fooddelivery_db'),
+            'USER': os.environ.get('DB_USER', 'fooddelivery'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 # Redis configuration for production
 CHANNEL_LAYERS = {
