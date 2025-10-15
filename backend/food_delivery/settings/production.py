@@ -64,7 +64,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/home/ubuntu/others/backend/logs/django.log',
+            'filename': '/home/ubuntu/others/foodyLite/backend/logs/django.log',
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
             'formatter': 'verbose',
