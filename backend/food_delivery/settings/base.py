@@ -2,16 +2,22 @@
 
 import os
 from pathlib import Path
-from decouple import config
-import dj_database_url
+import environ
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+APPS_DIR = BASE_DIR / "apps"
+env = environ.Env()
+
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
+if READ_DOT_ENV_FILE:
+    # OS environment variables take precedence over variables from .env
+    env.read_env(str(BASE_DIR.parent / ".env"))
 
 # Security settings
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-in-production')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-change-in-production')
+DEBUG = env.bool('DEBUG', default=True)
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 # Application definition
 DJANGO_APPS = [
@@ -77,17 +83,22 @@ ASGI_APPLICATION = 'food_delivery.asgi.application'
 
 # Database configuration
 DATABASES = {
-    'default': dj_database_url.parse(
-        config('DATABASE_URL', default='sqlite:///db.sqlite3')
+    'default': env.db(
+        'DATABASE_URL',
+        default='sqlite:///db.sqlite3'
     )
 }
+DATABASES['default']['ATOMIC_REQUESTS'] = True
+
+# Redis URL
+REDIS_URL = env('REDIS_URL', default='redis://127.0.0.1:6379/0')
 
 # Channels configuration
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [config('REDIS_URL', default='redis://127.0.0.1:6379')],
+            "hosts": [REDIS_URL],
         },
     },
 }
@@ -151,8 +162,8 @@ REST_FRAMEWORK = {
 }
 
 # CORS configuration
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://127.0.0.1:8000').split(',')
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=True, cast=bool)
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=['http://localhost:3000', 'http://127.0.0.1:8000'])
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=True)
 
 # Logging configuration
 LOGGING = {
@@ -199,10 +210,10 @@ LOGGING = {
 
 # Custom application settings
 APP_SETTINGS = {
-    'OTP_EXPIRY_MINUTES': config('OTP_EXPIRY_MINUTES', default=10, cast=int),
-    'MAX_BOOKING_DISTANCE_KM': config('MAX_BOOKING_DISTANCE_KM', default=50, cast=int),
-    'DEFAULT_BOOKING_PRICE': config('DEFAULT_BOOKING_PRICE', default=50.00, cast=float),
-    'PAGINATION_SIZE': config('PAGINATION_SIZE', default=10, cast=int),
+    'OTP_EXPIRY_MINUTES': env.int('OTP_EXPIRY_MINUTES', default=10),
+    'MAX_BOOKING_DISTANCE_KM': env.int('MAX_BOOKING_DISTANCE_KM', default=50),
+    'DEFAULT_BOOKING_PRICE': env.float('DEFAULT_BOOKING_PRICE', default=50.00),
+    'PAGINATION_SIZE': env.int('PAGINATION_SIZE', default=10),
 }
 
 # Security settings for production
