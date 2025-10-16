@@ -120,7 +120,7 @@ Use OTP **1234** for all test users:
 | Customer | 8888888888 | customer2 |
 | Delivery Partner | 7777777777 | delivery1 |
 | Delivery Partner | 6666666666 | delivery2 |
-| Admin | 5555555555 | admin1 |
+| Admin | 1111111111 | admin1 |
 
 ## 📱 User Workflows
 
