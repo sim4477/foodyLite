@@ -85,6 +85,7 @@ class BookingStatusUpdateView(LoginRequiredMixin, UpdateView):
     model = Booking
     form_class = BookingStatusForm
     template_name = 'booking/booking_status_update.html'
+    success_url = reverse_lazy('booking:list')
 
     def get_queryset(self):
         user = self.request.user
@@ -95,6 +96,10 @@ class BookingStatusUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Status updated successfully!')
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        # Redirect to the booking detail page after update
+        return reverse_lazy('booking:detail', kwargs={'pk': self.object.pk})
 
 
 class AssignBookingView(LoginRequiredMixin, UpdateView):

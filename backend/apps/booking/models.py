@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -36,6 +37,9 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking #{self.id} - {self.customer.mobile_number}"
+
+    def get_absolute_url(self):
+        return reverse('booking:detail', kwargs={'pk': self.pk})
 
     @property
     def can_be_cancelled(self):
