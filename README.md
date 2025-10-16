@@ -51,7 +51,7 @@ A Django-based food delivery application with real-time chat functionality, role
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd food_delivery_app_with_reusable_functions
+cd foodLite
 
 # Run the automated setup script
 ./setup.sh
@@ -65,8 +65,6 @@ cd food_delivery_app_with_reusable_functions
 sudo apt-get update
 sudo apt-get install postgresql postgresql-contrib redis-server python3-pip python3-venv
 
-# CentOS/RHEL
-sudo yum install postgresql postgresql-server redis python3-pip
 ```
 
 #### 2. Setup Database
@@ -148,7 +146,7 @@ Use OTP **1234** for all test users:
 ## 🗂️ Project Structure
 
 ```
-food_delivery_app_with_reusable_functions/
+foodyLite/
 ├── backend/
 │   ├── apps/
 │   │   ├── authentication/     # User authentication & OTP
@@ -189,13 +187,6 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:8000
 ```
 
 ## 🚀 Deployment
-
-### Heroku Deployment
-1. Install Heroku CLI
-2. Create Heroku app: `heroku create your-app-name`
-3. Set environment variables in Heroku dashboard
-4. Deploy: `git push heroku main`
-
 ### PythonAnywhere Deployment
 1. Upload code to PythonAnywhere
 2. Create virtual environment and install requirements
